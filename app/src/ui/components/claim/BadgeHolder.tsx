@@ -150,7 +150,7 @@ const BadgeHolder: FC<BadgeHolderProps> = ({
               padding={'0 40px'}
               fontFamily={'var(--alt-font)'}
             >
-              Check my badges
+              Browse collection
             </Button>
           </Link>
         </Box>
