@@ -1,7 +1,7 @@
 const fetch = require(`node-fetch`)
 
 const apiHost = process.env.GATSBY_API_POAP;
-const deliveriesUrl = (limit, offset) => `${apiHost}/deliveries?limit=${limit}&offset=${offset}`;
+const deliveriesUrl = (limit, offset) => `${apiHost}/deliveries?limit=${limit}&offset=${offset}&approved=true`;
 
 exports.createSchemaCustomization = ({ actions }) => {
   const { createTypes } = actions
