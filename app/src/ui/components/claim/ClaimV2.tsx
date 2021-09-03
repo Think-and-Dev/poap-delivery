@@ -1,10 +1,9 @@
 import React, { FC, useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { BaseProvider } from '@ethersproject/providers/lib';
-import { Box, Spinner, useToast } from '@chakra-ui/core';
+import { Box, useToast } from '@chakra-ui/core';
 
 // Hooks
-import { useEvents } from 'lib/hooks/useEvents';
 import { useClaimV2 } from 'lib/hooks/useClaimV2';
 import { useStateContext } from 'lib/hooks/useCustomState';
 
@@ -16,18 +15,25 @@ import CardWithBadges from 'ui/components/CardWithBadges';
 import SiteNoticeModal from 'ui/components/SiteNoticeModal';
 
 // Types
-import { AirdropEventData, Transaction, PoapEvent, Queue, QueueStatus } from 'lib/types';
+import {
+  Transaction,
+  PoapEvent,
+  Queue,
+  QueueStatus,
+  GraphDelivery,
+  DeliveryAddress,
+} from 'lib/types';
 import { api, endpoints } from 'lib/api';
+
 type ClaimProps = {
-  event: AirdropEventData;
+  delivery: GraphDelivery;
   deliveryId: number;
   reloadAction: () => void;
 };
 
-const ClaimV2: FC<ClaimProps> = ({ event, deliveryId, reloadAction }) => {
+const ClaimV2: FC<ClaimProps> = ({ delivery, deliveryId, reloadAction }) => {
   const { account, saveTransaction, transactions } = useStateContext();
   // Query hooks
-  const { data: events } = useEvents();
   const [claimV2POAP, { isLoading: isClaimingPOAP }] = useClaimV2();
   const toast = useToast();
 
@@ -39,8 +45,7 @@ const ClaimV2: FC<ClaimProps> = ({ event, deliveryId, reloadAction }) => {
   const [error, setError] = useState<string>('');
   const [addressValidated, setAddressValidated] = useState<boolean>(false);
   const [validatingAddress, setValidatingAddress] = useState<boolean>(false);
-  const [addressClaims, setAddressClaims] = useState<number[]>([]);
-
+  const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress | undefined>(undefined);
   const [claiming, setClaiming] = useState<boolean>(false);
   const [claimed, setClaimed] = useState<boolean>(false);
 
@@ -49,55 +54,46 @@ const ClaimV2: FC<ClaimProps> = ({ event, deliveryId, reloadAction }) => {
   const handleInputChange = (value: string) => {
     setAddress(value);
   };
-  const handleSubmit = async () => {
-    if (address === '') return;
 
-    let _address = '';
-    setEns('');
+  const handleSubmit = async () => {
+    //todo encapsulate this fetch
     setValidatingAddress(true);
 
-    if (!providerL1) {
-      setError('No connection to the Ethereum network');
-      setValidatingAddress(false);
-      return;
-    }
+    const response = await fetch(endpoints.poap.deliveryAddress(delivery.id, address));
 
-    // Check if is valid address
-    if (!ethers.utils.isAddress(address)) {
-      const resolvedAddress = await providerL1.resolveName(address);
-      if (!resolvedAddress) {
+    if (!response.ok) {
+      if (response.status === 404) {
+        setError('Address not found in claim list');
+      } else if (response.status === 400) {
         setError('Please enter a valid Ethereum address or ENS Name');
-        setValidatingAddress(false);
-        return;
+      } else if (response.status === 500) {
+        setError('An internal error has ocurred, please try again later');
       }
-      setEns(address);
-      setAddress(resolvedAddress);
-      _address = resolvedAddress;
-    } else {
-      _address = ethers.utils.getAddress(address);
-      setAddress(_address);
-    }
-
-    // Check if is in event list
-    if (!(_address.toLowerCase() in event.addresses)) {
-      setError('Address not found in claim list');
       setValidatingAddress(false);
       return;
     }
 
+    const _deliveryAddress: DeliveryAddress = await response.json();
+
+    setDeliveryAddress(_deliveryAddress);
+    setAddress(_deliveryAddress.address);
+    setPoapsToClaim(_deliveryAddress.events);
     setValidatingAddress(false);
     setAddressValidated(true);
-    setAddressClaims(event.addresses[_address.toLowerCase()]);
     checkClaim();
   };
+
   const clearForm = () => {
     setAddress('');
     setEns('');
     setError('');
-    setAddressClaims([]);
     setAddressValidated(false);
     setClaiming(false);
+    setDeliveryAddress(undefined);
+    setClaimed(false);
+    setPoapsToClaim([]);
   };
+
   const handleClaimSubmit = async () => {
     setClaiming(true);
 
@@ -105,7 +101,7 @@ const ClaimV2: FC<ClaimProps> = ({ event, deliveryId, reloadAction }) => {
       const claimResponse = await claimV2POAP({ id: deliveryId, address });
       if (claimResponse) {
         let tx: Transaction = {
-          key: event.key,
+          key: delivery.slug,
           address,
           queue_uid: claimResponse.queue_uid,
           status: 'pending',
@@ -120,13 +116,31 @@ const ClaimV2: FC<ClaimProps> = ({ event, deliveryId, reloadAction }) => {
       console.log(e);
     }
   };
-  const checkClaim = useCallback(() => {
-    if (event.claims && address) {
-      if (event.claims[address.toLowerCase()]) {
-        setClaimed(event.claims[address.toLowerCase()]);
-      }
+
+  let filteredTransactions =
+    transactions &&
+    deliveryAddress &&
+    transactions.filter((tx) => tx.key === delivery.slug && tx.address === deliveryAddress.address);
+
+  const transactionPassed =
+    filteredTransactions &&
+    filteredTransactions.length > 0 &&
+    filteredTransactions.some((tx) => tx.status === 'passed');
+
+  useEffect(() => {
+    if (transactionPassed) {
+      const _deliveryAddress = { ...deliveryAddress };
+      _deliveryAddress.claimed = true;
+      setDeliveryAddress(_deliveryAddress);
     }
-  });
+    // eslint-disable-next-line
+  }, [transactionPassed]);
+
+  const checkClaim = useCallback(() => {
+    if (deliveryAddress && deliveryAddress.claimed) {
+      setClaimed(true);
+    }
+  }, [deliveryAddress]);
 
   // Effects
   useEffect(() => {
@@ -197,35 +211,17 @@ const ClaimV2: FC<ClaimProps> = ({ event, deliveryId, reloadAction }) => {
     return () => clearInterval(interval);
   }, [transactions]); //eslint-disable-line
   useEffect(() => {
-    let filteredTransactions = transactions.filter((tx) => tx.key === event.key);
+    let filteredTransactions = transactions.filter((tx) => tx.key === delivery.slug);
     setEventTransactions(filteredTransactions);
   }, [transactions]); //eslint-disable-line
+
   useEffect(() => {
     if (account && address === '') setAddress(account);
   }, [account]); //eslint-disable-line
-  useEffect(() => {
-    if (events) {
-      let _poapsToClaim = events
-        .filter((ev) => event.eventIds.indexOf(ev.id) > -1)
-        .sort((a, b) => (a.id < b.id ? 1 : -1));
-      setPoapsToClaim(_poapsToClaim);
-    }
-  }, [events]); //eslint-disable-line
+
   useEffect(() => {
     checkClaim();
-  }, [checkClaim, event]);
-
-  if (!events) {
-    return (
-      <Box maxW={['90%', '90%', '90%', '600px']} m={'0 auto'} p={'50px 0'}>
-        <CardWithBadges>
-          <Box h={250} textAlign={'center'}>
-            <Spinner size="xl" color={'gray.light'} mt={'100px'} />
-          </Box>
-        </CardWithBadges>
-      </Box>
-    );
-  }
+  }, [checkClaim, delivery, deliveryAddress]);
 
   return (
     <Box maxW={['90%', '90%', '90%', '600px']} m={'0 auto'} p={'50px 0'}>
@@ -237,7 +233,7 @@ const ClaimV2: FC<ClaimProps> = ({ event, deliveryId, reloadAction }) => {
             inputAction={handleInputChange}
             submitAction={handleSubmit}
             buttonDisabled={validatingAddress}
-            isDisabled={!event.active}
+            isDisabled={!delivery.active}
           />
         </CardWithBadges>
       )}
@@ -247,7 +243,6 @@ const ClaimV2: FC<ClaimProps> = ({ event, deliveryId, reloadAction }) => {
             backAction={clearForm}
             ens={ens}
             address={address}
-            claims={addressClaims}
             poaps={poapsToClaim}
             claimed={claimed}
             submitAction={handleClaimSubmit}
@@ -257,7 +252,7 @@ const ClaimV2: FC<ClaimProps> = ({ event, deliveryId, reloadAction }) => {
         </CardWithBadges>
       )}
       <Transactions transactions={eventTransactions} />
-      {!event.active && <SiteNoticeModal />}
+      {!delivery.active && <SiteNoticeModal />}
     </Box>
   );
 };

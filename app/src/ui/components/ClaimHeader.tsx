@@ -6,13 +6,19 @@ import { RiShareBoxLine } from 'react-icons/ri';
 import Content from 'ui/styled/Content';
 
 // Types
-import { AirdropEventData } from 'lib/types';
+import { AirdropEventData, GraphDelivery } from 'lib/types';
+
 type ClaimHeaderProps = {
-  event: AirdropEventData;
+  event?: AirdropEventData;
+  delivery?: GraphDelivery;
   migrated?: boolean;
 };
 
-const ClaimHeader: FC<ClaimHeaderProps> = ({ event, migrated }) => {
+const ClaimHeader: FC<ClaimHeaderProps> = ({ event, delivery, migrated }) => {
+  const page_title_image = event ? event.pageTitleImage : delivery.page_title_image;
+  const page_title = event ? event.pageTitle : delivery.page_title;
+  const page_text = event ? event.pageText : delivery.page_text;
+
   return (
     <Flex
       p={['50px 45px', '50px 45px', '50px 45px', '50px 100px']}
@@ -29,18 +35,18 @@ const ClaimHeader: FC<ClaimHeaderProps> = ({ event, migrated }) => {
           lineHeight={'80px'}
           textAlign={'center'}
         >
-          {event.pageTitleImage && (
+          {page_title_image && (
             <Image
               size={'40px'}
               display={'inline'}
               margin={'0 10px 5px 0'}
-              src={event.pageTitleImage}
-              alt={event.pageTitle}
+              src={page_title_image}
+              alt={page_title}
             />
           )}
-          {event.pageTitle}
+          {page_title}
         </Heading>
-        <Content dangerouslySetInnerHTML={{ __html: event.pageText }} />
+        <Content dangerouslySetInnerHTML={{ __html: page_text }} />
         {migrated && (
           <Box mt={'10px'} as={'p'} lineHeight={'16px'} fontSize={'14px'}>
             Please note that this Airdrop was updated, and the new contract does not include address
@@ -48,12 +54,6 @@ const ClaimHeader: FC<ClaimHeaderProps> = ({ event, migrated }) => {
             if it's already in your wallet.
           </Box>
         )}
-        <Box mt={'10px'} as={'p'} fontSize={'16px'}>
-          <Link href={event.githubLink} color={'primaryColor'} isExternal>
-            View eligible addresses
-            <RiShareBoxLine />
-          </Link>
-        </Box>
       </Box>
     </Flex>
   );

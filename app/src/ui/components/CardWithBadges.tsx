@@ -5,7 +5,9 @@ import { Box, Image } from '@chakra-ui/core';
 import Card from 'ui/components/Card';
 
 // Assets
+// @ts-ignore
 import badgesLeft from 'assets/images/badge-party-left.svg';
+// @ts-ignore
 import badgesRight from 'assets/images/badge-party-right.svg';
 
 const CardWithBadges: FC = ({ children }) => {

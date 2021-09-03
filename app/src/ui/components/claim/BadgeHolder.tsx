@@ -5,6 +5,7 @@ import { Flex, Heading, Box, Button, Image, Link, Icon } from '@chakra-ui/core';
 import { endpoints } from 'lib/api';
 
 // Asset
+// @ts-ignore
 import whiteStar from 'assets/images/white-star.svg';
 
 // Components
@@ -12,12 +13,13 @@ import BadgeAmount from 'ui/styled/BadgeAmount';
 
 // Types
 import { PoapEvent } from 'lib/types';
+
 type BadgeHolderProps = {
   backAction: () => void;
   submitAction: () => void;
   address: string;
   ens: string;
-  claims: number[];
+  claims?: number[];
   claimed: boolean;
   poaps: PoapEvent[];
   buttonDisabled: boolean;
@@ -74,7 +76,9 @@ const BadgeHolder: FC<BadgeHolderProps> = ({
         justifyContent={'space-around'}
       >
         {poaps.map((poap) => {
-          const toBeClaimed = claims.filter((claim) => claim === poap.id).length;
+          const toBeClaimed = claims
+            ? claims.filter((claim) => claim === poap.id).length
+            : poaps.length;
           return (
             <Box
               key={poap.id}
@@ -139,7 +143,7 @@ const BadgeHolder: FC<BadgeHolderProps> = ({
             mb={'20px'}
           >
             Congratulations! <br />
-            {claims.length > 1
+            {(claims ? claims.length : poaps.length) > 1
               ? 'Your badges are now in your wallet'
               : 'Your badge is now in your wallet'}
           </Heading>

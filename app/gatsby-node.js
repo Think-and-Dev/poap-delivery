@@ -21,6 +21,7 @@ exports.createSchemaCustomization = ({ actions }) => {
       slug: String
       metadata_title: String
       metadata_description: String
+      active: Boolean
     }
   `
   createTypes(typeDefs)
@@ -81,6 +82,7 @@ exports.createPages = async function ({ actions, graphql }) {
           slug
           metadata_title
           metadata_description
+          active
         }
       }
     }

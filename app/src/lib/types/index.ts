@@ -97,10 +97,12 @@ export type GraphDelivery = {
   page_title: string;
   page_text: string;
   slug: string;
+  active: boolean;
 };
 
 export type DeliveryAddress = {
   address: string;
   event_ids: string;
   claimed: boolean;
+  events?: PoapEvent[];
 };
