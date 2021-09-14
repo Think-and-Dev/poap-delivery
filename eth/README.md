@@ -81,7 +81,7 @@ npx buidler run scripts/deploy.js
  - Sokol: [0x150FBB50191E7Fb58f9FC36c0210e639b1351644](https://blockscout.com/poa/sokol/address/0x150FBB50191E7Fb58f9FC36c0210e639b1351644/transactions)
 
 
-### KEEP Network Mainnet Stakers  ###
+### KEEP Network Ethereum Stakers  ###
 - xDAI: [0xECD184B0FF06593CE9cE6b2D654E9Fe432E1Bf73](https://blockscout.com/poa/xdai/address/0xECD184B0FF06593CE9cE6b2D654E9Fe432E1Bf73/transactions)
 - Sokol: [0xA3aF4983dddC975Ec621A43eFA8B8B38AB599336](https://blockscout.com/poa/sokol/address/0xA3aF4983dddC975Ec621A43eFA8B8B38AB599336/transactions)
 

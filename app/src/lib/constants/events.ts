@@ -217,10 +217,10 @@ const events: AirdropEvent = {
     key: 'keep-stakers',
     image:
       'https://storage.googleapis.com/poapmedia/keep-network-mainnet-stakers-2020-logo-1607295999088.png',
-    cardTitle: 'KEEP Network Mainnet Stakers',
-    cardText: `<p>This is a POAP created for the first 112 mainnet ECDSA node runners on the KEEP Network.</p>`,
-    pageTitle: '🏰 KEEP Network Mainnet Stakers',
-    pageText: `<p>This is a POAP created for the first 112 mainnet ECDSA node runners on the KEEP Network.</p><p>These initial 100 participants created a private, decentralized network where users could mint tBTC.</p>`,
+    cardTitle: 'KEEP Network Ethereum Stakers',
+    cardText: `<p>This is a POAP created for the first 112 Ethereum ECDSA node runners on the KEEP Network.</p>`,
+    pageTitle: '🏰 KEEP Network Ethereum Stakers',
+    pageText: `<p>This is a POAP created for the first 112 Ethereum ECDSA node runners on the KEEP Network.</p><p>These initial 100 participants created a private, decentralized network where users could mint tBTC.</p>`,
     contractAddress: process.env.GATSBY_KEEP_NETWORK_MAINNET_STAKERS_AIRDROP_CONTRACT || '',
     addresses: keepStakers,
     eventIds: process.env.GATSBY_KEEP_NETWORK_MAINNET_STAKERS_EVENT_IDS
