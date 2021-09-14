@@ -15,9 +15,9 @@ import Claim from 'ui/components/claim';
 const KeepStakers = () => {
   return (
     <PageWrapper
-      title={'POAP ✈️ | 🏰 KEEP Network Mainnet Stakers'}
+      title={'POAP ✈️ | 🏰 KEEP Network Ethereum Stakers'}
       description={
-        'This is a POAP created for the first 112 mainnet ECDSA node runners on the KEEP Network. These initial 100 participants created a private, decentralized network where users could mint tBTC.'
+        'This is a POAP created for the first 112 Ethereum ECDSA node runners on the KEEP Network. These initial 100 participants created a private, decentralized network where users could mint tBTC.'
       }
     >
       <MainLayout>

@@ -3,7 +3,7 @@ import json
 KEEP_EVENT_ID = 580
 
 def main():
-    print('> Starting KEEP network mainnet stakers')
+    print('> Starting KEEP network Ethereum stakers')
     formatted_output = {}
     with open('original.txt') as original_file:
         for each in original_file:
